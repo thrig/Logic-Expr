@@ -1,0 +1,10 @@
+Build.PL
+Changes
+LICENSE
+MANIFEST
+README
+lib/Logic/Expr.pm
+lib/Logic/Expr/Parser.pm
+t/00-load.t
+t/pod-coverage.t
+t/pod.t
