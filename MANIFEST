@@ -6,5 +6,9 @@ README
 lib/Logic/Expr.pm
 lib/Logic/Expr/Parser.pm
 t/00-load.t
+t/10-parser.t
+t/20-logic.t
 t/pod-coverage.t
 t/pod.t
+META.yml
+META.json
