@@ -19,6 +19,4 @@ eval "use Pod::Coverage $min_pc";
 plan skip_all => "Pod::Coverage $min_pc required for testing POD coverage"
   if $@;
 
-# this may need to be [A-Z]+ if Object::Pad adds more such. the
-# on_parse* are Parser::MGC hook functions
-all_pod_coverage_ok( { trustme => [qr/DOES|META|on_parse_(?:start|end)/] } );
+all_pod_coverage_ok();

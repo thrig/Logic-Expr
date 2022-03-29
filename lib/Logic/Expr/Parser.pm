@@ -3,7 +3,7 @@
 # a parser for logic expressions
 
 package Logic::Expr::Parser;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 use Logic::Expr ':all';
 use base 'Parser::MGC';    # 0.21 or higher required
 
@@ -17,38 +17,23 @@ our %le_map = (
 );
 our $le_regex = qr/->|==|[&|v]/;
 
-sub on_parse_start
-{
-    my ($self) = @_;
-    # hopefully these never conflict with Parser::MGC internals
-    @$self{qw(_atoms _bools)} = ( {}, [] );
-}
-
-sub on_parse_end
-{
-    my ( $self, $tree ) = @_;
-    Logic::Expr->new(
-        atoms => $self->{_atoms},
-        bools => $self->{_bools},
-        expr  => $tree
-    );
-}
+sub on_parse_end { Logic::Expr->new( expr => $_[1] ) }
 
 sub parse
 {
     my ($self) = @_;
-    my $first = $self->parse_term;
+    my $first = $self->_parse_term;
     my ( $operator, $second );
     $self->maybe(
         sub {
             $operator = $le_map{ $self->expect($le_regex) };
-            $second   = $self->parse_term;
+            $second   = $self->_parse_term;
         }
     );
     defined $operator ? [ $operator, $first, $second ] : $first;
 }
 
-sub parse_term
+sub _parse_term
 {
     my ($self) = @_;
     my $neg    = $self->maybe( sub { $self->expect(qr/!+|~+/) } );
@@ -56,11 +41,11 @@ sub parse_term
         sub { $self->scope_of( "(", \&parse, ")" ) },
         sub {
             my $atom = $self->expect(qr/[A-Z]+/);
-            unless ( exists $self->{_atoms}->{$atom} ) {
-                push @{ $self->{_bools} }, TRUE;
-                $self->{_atoms}->{$atom} = \$self->{_bools}->[-1];
+            unless ( exists $Logic::Expr::atoms{$atom} ) {
+                push @Logic::Expr::bools, TRUE;
+                $Logic::Expr::atoms{$atom} = \$Logic::Expr::bools[-1];
             }
-            $self->{_atoms}->{$atom};
+            $Logic::Expr::atoms{$atom};
         },
     );
     # simplify !!!X to !X and !!X to X
@@ -95,8 +80,8 @@ B<from_string> and B<from_file> are the most relevant methods.
 =head1 SYNTAX SANS EBNF
 
 The usual atomic letters (C<X>, C<Y>, etc) are extended to include words
-in captial letters to allow for more than 26 atoms, or at least more
-descriptive names.
+in capital letters to allow for more than 26 atoms, or at least more
+descriptive names, for better or worse.
 
 Operators include C<!> or C<~> for negation of the subsequent atom or
 parenthesized term, and the binary operators
@@ -109,12 +94,14 @@ parenthesized term, and the binary operators
 which taken together allow for such expressions as
 
   X&!Y
-  X|~Y
   GILBERT&SULLIVAN
-  (CATvDOG)->FISH
+  (CAT|DOG)->FISH
+  ALIENvPREDICATOR
   ETC
 
 =head1 MINUTIAE
+
+Code coverage tools can be persnickety about these sorts of things.
 
 =over 4
 
@@ -122,17 +109,9 @@ which taken together allow for such expressions as
 
 Internal L<Parser::MGC> hook function.
 
-=item B<on_parse_start>
-
-Internal L<Parser::MGC> hook function.
-
 =item B<parse>
 
 Internal L<Parser::MGC> function.
-
-=item B<parse_term>
-
-Called by the internal L<Parser::MGC> function.
 
 =back
 

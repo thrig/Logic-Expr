@@ -12,26 +12,32 @@ use Logic::Expr::Parser;
 my $le = Logic::Expr::Parser->new;
 
 my $pe = $le->from_string('X');
-is( [ keys %{ $pe->atoms } ], ['X'] );
-is( scalar @{ $pe->bools },   1 );
-my $addr = refaddr \$pe->bools->[0];
-is( $addr,           refaddr $pe->atoms->{X} );
-is( $addr,           refaddr $pe->expr );
-is( $pe->bools->[0], 1 );                         # bools TRUE by default
-is( ref $pe->expr,   'SCALAR' );
+is( [ keys %Logic::Expr::atoms ], ['X'] );
+is( scalar @Logic::Expr::bools,   1 );
+my $addr = refaddr \$Logic::Expr::bools[0];
+is( $addr,                  refaddr $Logic::Expr::atoms{X} );
+is( $addr,                  refaddr $pe->expr );
+is( $Logic::Expr::bools[0], 1 );          # bools TRUE by default
+is( ref $pe->expr,          'SCALAR' );
+
+Logic::Expr::reset;
 
 $pe = $le->from_string('CAT&(DOGv(FISH&!CAT))');
-is( [ sort keys %{ $pe->atoms } ], [qw(CAT DOG FISH)] );
-is( scalar @{ $pe->bools },        3 );
-is( ref $pe->expr,                 'ARRAY' );
+is( [ sort keys %Logic::Expr::atoms ], [qw(CAT DOG FISH)] );
+is( scalar @Logic::Expr::bools,        3 );
+is( ref $pe->expr,                     'ARRAY' );
+
+Logic::Expr::reset;
 
 $pe = $le->from_string('X&Y');
-is( [ sort keys %{ $pe->atoms } ], [qw(X Y)] );
-is( scalar @{ $pe->bools },        2 );
+is( [ sort keys %Logic::Expr::atoms ], [qw(X Y)] );
+is( scalar @Logic::Expr::bools,        2 );
+
+Logic::Expr::reset;
 
 # negation reduction; should not get nested [ '!', ...
 $pe   = $le->from_string('!!!!X');
-$addr = refaddr \$pe->bools->[0];
+$addr = refaddr \$Logic::Expr::bools[0];
 is( $addr, refaddr $pe->expr );
 
 # bad expressions -- error string may come from Parser::MGC so these
